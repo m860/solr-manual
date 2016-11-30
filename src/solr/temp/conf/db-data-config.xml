@@ -1,0 +1,131 @@
+<dataConfig>
+    <script>
+    <![CDATA[
+        function processProductCommon(row) {
+            var systemCategories = row.get("_SystemCategories");
+            
+            if (systemCategories != null) {
+                var systemCategorySysNoArray = new java.util.ArrayList();
+                var systemCategoryCodeArray = new java.util.ArrayList();
+
+                var systemCategoryCount = systemCategories.size();
+
+                for (var i = 0; i < systemCategoryCount; i++) {
+                    var systemCategory = systemCategories.get(i);
+                    
+                    if (systemCategory != null) {
+                        var matches = systemCategory.split("\|");
+                        
+                        if (matches.length >= 2) {
+                            systemCategorySysNoArray.add(matches[0]);
+                            systemCategoryCodeArray.add(matches[1]);
+                        }
+                    }
+                }
+
+                row.put("SystemCategorySysNo", systemCategorySysNoArray);
+                row.put("SystemCategoryCode", systemCategoryCodeArray);
+            }
+            
+            //row.remove("_SystemCategories");
+            //row.remove("_ProductCollections");
+            
+            return row;
+        }
+    ]]>
+    </script>
+
+    <dataSource name="ds-qa" driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="jdbc:sqlserver://172.16.0.252:14331;databaseName=YZ_Product;" user="sa" password="yzw@123" />
+    <dataSource name="ds-pre" driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="jdbc:sqlserver://172.16.0.243:14331;databaseName=YZ_Product;" user="sa" password="yzw@123" />
+    <dataSource name="ds-prd" driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="jdbc:sqlserver://192.168.210.134:1433;databaseName=YZ_Product;" user="APP_Reader" password="RRI~720E$fe2gIfIrr" />
+    
+    <document>
+        <entity name="productCommon" dataSource="ds-qa" transformer="RegexTransformer, script:processProductCommon"
+                query="
+DECLARE @CleanFlag VARCHAR(5) = '${dataimporter.request.clean}'
+DECLARE @FullFlag VARCHAR(5) = '${dataimporter.request.full}'
+DECLARE @LastIndexTime DATETIME = CASE ISDATE('${dataimporter.last_index_time}') WHEN 1 THEN DATEADD(hour, DATEDIFF(hour, GETUTCDATE(), GETDATE()), '${dataimporter.last_index_time}') ELSE '1970-01-01' END
+
+SELECT
+  PC.SysNo,
+  PC.SysNo AS [ProductCommonSysNo],
+  PC.ProductCommonCode,
+  PC.ProductCommonName,
+  PC.Model,
+  PC.ModelDescription,
+  PC.CustomModel,
+  PC.PropertyValueAlias,
+  PC.BizType,
+  PCC.Summary,
+  PCC.Description,
+  PC.CommonStatus,
+  PC.AuditStatus,
+  PC.UnitSysNo,
+  PU.UnitName,
+  PC.OriginSysNo,
+  PO.OriginName,
+  PC.CategorySysNo,
+  C.CategoryCode,
+  C.Name AS CategoryName,
+  C.ParentCategorySysNo,
+  C.ParentCategoryCode,
+  PC.OrganizationSysNo,
+  SO.OrganizationCode,
+  SO.OrganizationName,
+  (
+    SELECT
+      CAST(SC.[SysNo] AS VARCHAR) + '|' + RTRIM(SC.[CategoryCode]) AS 'data()'
+    FROM YZ_Operation.[dbo].[SystemCategory_Category] AS SCC WITH(NOLOCK)
+    INNER JOIN YZ_Operation.[dbo].[SystemCategory] AS SC WITH(NOLOCK)
+      ON SCC.SystemCategorySysNo = SC.SysNo
+    WHERE SCC.CategorySysNo = PC.CategorySysNo
+    FOR XML PATH('')
+  ) AS [_SystemCategories],
+  (
+    SELECT
+      CAST(PP.CategoryPropertySysNo AS VARCHAR) + '|' + CAST(PP.PropertyValueSysNo AS VARCHAR) AS 'data()'
+    FROM [YZ_Product].[dbo].[ProductProperty] AS PP WITH(NOLOCK)
+    WHERE PP.ProductCommonSysNo = PC.SysNo AND PP.ProductSysNo = 0
+    FOR XML PATH('')
+  ) AS [_Properties],
+  (
+    SELECT
+      CAST(PL.SysNo AS VARCHAR) + '|' + RTRIM(PL.OrganizationCode) AS 'data()'
+    FROM [YZ_Product].[dbo].[ProductCollection] AS PL WITH(NOLOCK)
+    WHERE PL.ProductCommonSysNo = PC.SysNo AND PL.CommonStatus = 1
+    FOR XML PATH('')
+  ) AS [_ProductCollections],
+  PC.InUserSysNo,
+  PC.InUserName,
+  SU.CellPhone AS [InUserCellPhone],
+  PC.InDate,
+  PC.EditUserSysNo,
+  PC.EditUserName,
+  PC.EditDate
+FROM YZ_Product.[dbo].[ProductCommon] AS PC WITH(NOLOCK)
+INNER JOIN YZ_Product.[dbo].[ProductCommonContent] AS PCC WITH(NOLOCK)
+  ON PC.SysNo = PCC.ProductCommonSysNo
+INNER JOIN YZ_Product.[dbo].[Category] AS C WITH(NOLOCK)
+  ON PC.CategorySysNo = C.SysNo
+LEFT JOIN YZ_AuthCenter.[dbo].[SystemUser] AS SU WITH(NOLOCK)
+  ON PC.InUserSysNo = SU.SysNo
+LEFT JOIN YZ_AuthCenter.[dbo].[SystemOrganization] AS SO WITH(NOLOCK)
+  ON PC.OrganizationSysNo = SO.SysNo
+LEFT JOIN YZ_Product.[dbo].[ProductUnit] AS PU WITH(NOLOCK)
+  ON PC.UnitSysNo = PU.SysNo
+LEFT JOIN YZ_Product.[dbo].[ProductOrigin] AS PO WITH(NOLOCK)
+  ON PC.OriginSysNo = PO.SysNo
+WHERE @CleanFlag != 'false' OR @FullFlag = 'true'
+  OR PC.EditDate > @LastIndexTime
+  OR PCC.EditDate > @LastIndexTime
+  OR C.EditDate > @LastIndexTime
+  OR SO.EditDate > @LastIndexTime
+  OR EXISTS( SELECT TOP 1 1 FROM YZ_Operation.[dbo].[SystemCategory_Category] WITH(NOLOCK) WHERE CategorySysNo = PC.CategorySysNo AND InDate > @LastIndexTime )
+  OR EXISTS( SELECT TOP 1 1 FROM YZ_Product.[dbo].[Product] WITH(NOLOCK) WHERE ProductCommonSysNo = PC.SysNo AND EditDate > @LastIndexTime )
+                ">
+            <field column="_SystemCategories" name="SystemCategories" splitBy=" " />
+            <field column="_Properties" name="Properties" splitBy=" " />
+            <field column="_ProductCollections" name="Collections" splitBy=" " />
+        </entity>
+    </document>
+</dataConfig>
