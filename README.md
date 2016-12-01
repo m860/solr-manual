@@ -100,26 +100,13 @@ $ sudo python zookeeperCLI.py install
 * restart
 
 ### 参数说明
-* --package
+名称|说明|默认值
+----|----|----
+--package|可以是url,也可以是本地已下载好的包|http://mirrors.cnnic.cn/apache/zookeeper/zookeeper-3.4.8/zookeeper-3.4.8.tar.gz
+--path| |/opt/zookeeper
+--port| |2181
+--dataDir| |/var/lib/zookeeper
+--server| |
+--id| |1
 
-默认值:http://mirrors.cnnic.cn/apache/zookeeper/zookeeper-3.4.8/zookeeper-3.4.8.tar.gz
-
-可以是url,也可以是本地已下载好的包
-
-* --path
-
-默认值:/opt/zookeeper
-
-* --port
-
-默认值:2181
-
-* --dataDir
-
-默认值:/var/lib/zookeeper
-
-* --server
-* --id
-
-默认值:1
 
