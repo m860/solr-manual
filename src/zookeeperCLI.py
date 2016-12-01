@@ -32,7 +32,11 @@ parser.add_option("--id", help="需要进行数据同步的server,如果有多�
 
 (options, args) = parser.parse_args()
 
-action = sys.argv[1].lower()
+action = ''
+if len(sys.argv) > 1:
+    action = sys.argv[1].lower()
+
+zkinstances = '/opt/zk-instances'
 
 
 def getFileName(path):
@@ -42,7 +46,7 @@ def getFileName(path):
 def downloadFile(url):
     filename = getFileName(url)
     savepath = os.path.join(options.path, filename)
-    file = urllib.URLopener();
+    file = urllib.URLopener()
 
     def progress(count, blockSize, totalSize):
         percent = int(count * blockSize * 100 / totalSize)
@@ -52,7 +56,7 @@ def downloadFile(url):
     try:
         file.retrieve(url, savepath, reporthook=progress)
     except:
-        print '下载失败'
+        print('下载失败')
         os.remove(savepath)
 
 
@@ -61,9 +65,9 @@ def createzk(path):
     dir = filename.replace('.tar.gz', '')
     inspath = os.path.join(options.path, dir)
     if not os.path.exists(inspath):
-        print '解压' + filename
+        print('解压' + filename)
         os.system('tar xzf ' + path + ' -C ' + options.path)
-    print '生成默认配置文件'
+    print ('生成默认配置文件')
     zooCfg = os.path.join(inspath, "conf/zoo.cfg")
     zooSampleCfg = os.path.join(inspath, "conf/zoo_sample.cfg")
     with open(zooSampleCfg) as o:
@@ -74,23 +78,22 @@ def createzk(path):
                 if line.startswith("clientPort"):
                     zoo.write('clientPort=' + options.port + '\n')
                     if options.server:
-                        print options.server
                         for server in options.server.split(","):
                             zoo.write(server + '\n')
                 else:
                     zoo.write(line)
-    print '生成数据文件'
+    print ('生成数据文件')
     if not os.path.exists(options.dataDir):
         os.makedirs(options.dataDir)
     with open(os.path.join(options.dataDir, 'myid'), 'w+') as myid:
         myid.write(options.id)
     # 生成缓存数据
-    with open('/opt/zk-instances', 'r+') as zk:
+    with open(zkinstances, 'r+') as zk:
         text = zk.read()
         zkserverpath = inspath + '/bin/zkServer.sh\n'
         if zkserverpath not in text:
             zk.write(inspath + '/bin/zkServer.sh\n')
-    print '创建完成'
+    print ('创建完成')
 
 
 if action == "install":
@@ -103,17 +106,25 @@ if action == "install":
     else:
         if options.package.startswith("http"):
             # download
-            print '下载' + fileName
+            print ('下载' + fileName)
             downloadFile(options.package)
             createzk(packagePath)
         else:
-            print '拷贝' + fileName
-            pass
+            print ('[TODO]拷贝' + fileName)
 elif action == 'start':
-    pass
+    with open(zkinstances) as ins:
+        for i in ins:
+            cmd = i.strip('\n') + " start"
+            os.system(cmd)
 elif action == 'stop':
-    pass
+    with open(zkinstances) as ins:
+        for i in ins:
+            cmd = i.strip('\n') + " stop"
+            os.system(cmd)
 elif action == "uninstall":
-    pass
+    print ('TODO')
 else:
-    pass
+    with open(zkinstances) as ins:
+        for i in ins:
+            cmd = i.strip('\n') + " status"
+            os.system(cmd)
