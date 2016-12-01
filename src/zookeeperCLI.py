@@ -96,7 +96,34 @@ def createzk(path):
     print ('创建完成')
 
 
+def zkserver(type='status'):
+    with open(zkinstances) as ins:
+        for i in ins:
+            cmd = i.strip('\n') + " " + type
+            os.system(cmd)
+
+
+def getDataDir(cfgpath):
+    with open(cfgpath) as cfg:
+        for line in cfg:
+            if line.startswith("dataDir"):
+                return line.strip('dataDir=').strip('\n')
+    return ''
+
+
+def getCfgPath(zk):
+    dn = os.path.dirname(zk)
+    return os.path.join(dn, '../conf/zoo.cfg')
+
+
+def getInsDir(zk):
+    dn = os.path.dirname(zk)
+    return os.path.join(dn, '../..')
+
+
 if action == "install":
+    if not os.path.exists(zkinstances):
+        open(zkinstances,'w+').close()
     if not os.path.exists(options.path):
         os.makedirs(options.path)
     fileName = getFileName(options.package)
@@ -110,21 +137,20 @@ if action == "install":
             downloadFile(options.package)
             createzk(packagePath)
         else:
-            print ('[TODO]拷贝' + fileName)
-elif action == 'start':
-    with open(zkinstances) as ins:
-        for i in ins:
-            cmd = i.strip('\n') + " start"
-            os.system(cmd)
-elif action == 'stop':
-    with open(zkinstances) as ins:
-        for i in ins:
-            cmd = i.strip('\n') + " stop"
-            os.system(cmd)
-elif action == "uninstall":
-    print ('TODO')
+            print ('拷贝' + fileName)
+            os.system('cp ' + options.package + ' ' + options.path)
+            createzk(packagePath)
+# elif action == "uninstall":
+#     # 停止服务
+#     zkserver('stop')
+#     # 根据配置文件删除数据文件
+#     with open(zkinstances) as ins:
+#         for line in ins:
+#             dd = getDataDir(getCfgPath(line))
+#             os.system('rm -r '+dd)
+#             # 删除zookeeper
+#             insd = getInsDir(line)
+#             os.system('rm -r '+insd)
+#     os.system('rm -r '+zkinstances)
 else:
-    with open(zkinstances) as ins:
-        for i in ins:
-            cmd = i.strip('\n') + " status"
-            os.system(cmd)
+    zkserver(action)

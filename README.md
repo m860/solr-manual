@@ -1,5 +1,5 @@
 # solr-manual
-工作日记,安装solr和相关配置
+安装solr的流程和相关配置
 
 # 安装前的准备
 * 操作系统CentOS 7
@@ -87,3 +87,39 @@ server.3=127.0.0.1:2883:3883
 # Set to "0" to disable auto purge feature
 #autopurge.purgeInterval=1
 ```
+## zookeeperCLI
+从安装到配置一步到位
+```bash
+$ sudo python zookeeperCLI.py install
+```
+第一参数可以缺省,如果缺省是查看zookeeper的status,zookeeper的所有命令都支持,包括如下值(不仅限于此):
+* install
+* start
+* stop
+* status
+* restart
+
+### 参数说明
+* --package
+
+默认值:http://mirrors.cnnic.cn/apache/zookeeper/zookeeper-3.4.8/zookeeper-3.4.8.tar.gz
+
+可以是url,也可以是本地已下载好的包
+
+* --path
+
+默认值:/opt/zookeeper
+
+* --port
+
+默认值:2181
+
+* --dataDir
+
+默认值:/var/lib/zookeeper
+
+* --server
+* --id
+
+默认值:1
+
