@@ -8,11 +8,13 @@ from helper import downloadFile, getConfigValue
 from stopSolr import stop
 
 solrCLICfg = getConfigValue('cli', 'confPath')
+solrDir = getConfigValue('solr', 'dir', solrCLICfg)
+solr = os.path.join(solrDir, 'bin/solr')
 
 # stop all solr server
-stop()
+os.system(solr + ' stop')
 
 # rm solr
-solrDir=getConfigValue('solr','dir',solrCLICfg)
-os.system('rm -fr '+solrDir)
-os.system('rm -f '+solrCLICfg)
+solrDir = getConfigValue('solr', 'dir', solrCLICfg)
+os.system('rm -fr ' + solrDir)
+os.system('rm -f ' + solrCLICfg)
