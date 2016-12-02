@@ -109,4 +109,18 @@ $ sudo python zookeeperCLI.py install
 --server| |
 --id| |1
 
+# 安装solr
+```bash
+$ # install
+$ sudo python src/installSolr.py
+$ # uninstall
+$ sudo python src/uninstallSolr.py
+```
+## 参数说明
+名称|说明|默认值
+----|----|----
+--package|可以是url,也可以是本地已下载好的包|http://apache.fayea.com/lucene/solr/5.5.3/solr-5.5.3.tgz
+--path| |/opt/solr
+
+
 
