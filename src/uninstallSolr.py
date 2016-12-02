@@ -5,7 +5,6 @@ import sys
 import os
 import urllib
 from helper import downloadFile, getConfigValue
-from stopSolr import stop
 
 solrCLICfg = getConfigValue('cli', 'confPath')
 solrDir = getConfigValue('solr', 'dir', solrCLICfg)
