@@ -87,8 +87,22 @@ server.3=127.0.0.1:2883:3883
 # Set to "0" to disable auto purge feature
 #autopurge.purgeInterval=1
 ```
-## zookeeperCLI
-从安装到配置一步到位
+
+## solr
+```bash
+$ cd downloads
+$ wget http://apache.fayea.com/lucene/solr/5.5.3/solr-5.5.3.tgz
+$ tar xzf solr-5.5.3.tgz
+```
+
+## 查看端口情况
+```bash
+$ losf -t tcp:8983 # centos 7
+```
+
+
+# 工具
+## 安装zookeeper
 ```bash
 $ sudo python zookeeperCLI.py install
 ```
@@ -109,14 +123,14 @@ $ sudo python zookeeperCLI.py install
 --server| |
 --id| |1
 
-# 安装solr
+## 安装solr
 ```bash
 $ # install
 $ sudo python src/installSolr.py
 $ # uninstall
 $ sudo python src/uninstallSolr.py
 ```
-## 参数说明
+### 参数说明
 名称|说明|默认值
 ----|----|----
 --package|可以是url,也可以是本地已下载好的包|http://apache.fayea.com/lucene/solr/5.5.3/solr-5.5.3.tgz
